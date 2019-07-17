@@ -14,8 +14,6 @@ class Navbar extends Component {
               }}
               className="col s8 brand-logo center black-text"
             >
-              <i className="material-icons">event_note</i>
-              You can manage your to-dos.
             </Link>
           </div>
         </nav>
