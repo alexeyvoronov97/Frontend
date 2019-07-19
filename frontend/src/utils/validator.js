@@ -21,7 +21,7 @@ export const isEmpty = (thing) => {
             empty = true;
             break;
         case 'string':
-            if (thing.trim().length === 0) {
+            if (thing.trim().length === 0 || thing === 'undefined') {
                 empty = true;
             }
             break;

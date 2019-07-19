@@ -1,8 +1,13 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
+import compose from "recompose/compose";
+import { connect } from "react-redux";
+import { withRouter } from "react-router-dom";
+import { Field, reduxForm, SubmissionError } from "redux-form";
+import PropTypes from "prop-types";
+
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
@@ -11,6 +16,9 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+
+import { registerUser } from "../actions/auth";
+import { FormInput } from "../components/form-controls";
 
 
 const styles = (theme => ({
@@ -40,37 +48,33 @@ const styles = (theme => ({
 
 class Register extends Component {
     
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       firstName: "", 
       lastName: "",
       email: "",
       password: "",
       password2: "", 
-      errors: {}
     };
   }
 
-  onChange = e => {
-      this.setState({ [e.target.id]: e.target.value });
-  };
+  register = async userData => {
+    try {
+      await this.props.registerUser(userData);
+    } catch(err) {
+      console.log("async register:", err);
+      if(err) {
+        throw new SubmissionError(err);
+      }
+    }
 
-  onSubmit = e => {
-      e.preventDefault();
-      const newUser = {
-        firstName: this.state.firstName, 
-        lastName: this.state.lastName,
-        email: this.state.email,
-        password: this.state.password, 
-        password2: this.state.password2
-      };
-      console.log(newUser);
-  };
+    alert("Sign up successfully");
+    this.props.history.push('/login');
+  }
 
   render() {
-    const { errors } = this.state;
-    const { classes } = this.props;
+    const { classes, handleSubmit, isFetching } = this.props;
 
     return (
       <Container component="main" maxWidth="xs">
@@ -82,10 +86,10 @@ class Register extends Component {
           <Typography component="h1" variant="h5" align="center">
             Sign up
           </Typography>
-          <form className={classes.form} noValidate onSubmit={ this.onSubmit }>
+          <form className={classes.form} onSubmit={handleSubmit(this.register)}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
-                <TextField
+                <Field
                   autoComplete="fname"
                   name="firstName"
                   variant="outlined"
@@ -94,13 +98,12 @@ class Register extends Component {
                   id="firstName"
                   label="First Name"
                   autoFocus
-                  value={ this.state.firstName }
-                  onChange= { this.onChange }
-                  error={ errors.firstName }
+                  disabled={isFetching}
+                  component={FormInput}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
+                <Field
                   variant="outlined"
                   required
                   fullWidth
@@ -108,13 +111,12 @@ class Register extends Component {
                   label="Last Name"
                   name="lastName"
                   autoComplete="lname"
-                  value={ this.state.lastName }
-                  onChange= { this.onChange }
-                  error={ errors.lastName }
+                  disabled={isFetching}
+                  component={FormInput}
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                <Field
                   variant="outlined"
                   required
                   fullWidth
@@ -122,13 +124,12 @@ class Register extends Component {
                   label="Email Address"
                   name="email"
                   autoComplete="email"
-                  value={ this.state.email }
-                  onChange= { this.onChange }
-                  error={ errors.email }
+                  disabled={isFetching}
+                  component={FormInput}
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                <Field
                   variant="outlined"
                   required
                   fullWidth
@@ -137,13 +138,12 @@ class Register extends Component {
                   type="password"
                   id="password"
                   autoComplete="current-password"
-                  value={ this.state.password }
-                  onChange= { this.onChange }
-                  error={ errors.password }
+                  disabled={isFetching}
+                  component={FormInput}
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                <Field
                   variant="outlined"
                   required
                   fullWidth
@@ -152,9 +152,8 @@ class Register extends Component {
                   type="password"
                   id="password2"
                   autoComplete="current-password"
-                  value={ this.state.password2 }
-                  onChange= { this.onChange }
-                  error={ errors.password2 }
+                  disabled={isFetching}
+                  component={FormInput}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -186,4 +185,33 @@ class Register extends Component {
     );
   }
 }
-export default withStyles(styles)(Register);
+
+Register.propTypes = {
+  isFetching: PropTypes.bool.isRequired
+}
+
+const mapStateToProps = state => ({
+  isFetching: state.auth.isFetching
+});
+
+export default compose(
+  withStyles(styles), 
+  withRouter, 
+  connect(
+    mapStateToProps, 
+    { registerUser }
+  ), 
+  reduxForm( {
+    form: "register", 
+    validate: (values, props) => {
+      const errors = {};
+      if(!values.firstName) errors.firstName = "You must type your first name!";
+      if(!values.lastName) errors.lastName = "You must type your last name!";
+      if(!values.email) errors.email = "You must type your email address!";
+      if(!values.password) errors.password = "You must type your password!";
+      if(values.password !== values.password2) errors.password2 = "Your password does not match!";
+      if(!values.password2) errors.password2 = "You must confirm your password!";
+      return errors;
+    }
+  })
+)(Register);

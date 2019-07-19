@@ -1,16 +1,25 @@
 import React, { Component } from "react";
+import compose from "recompose/compose";
+import { connect } from "react-redux";
+import { withRouter } from "react-router-dom";
+import { Field, reduxForm, SubmissionError } from "redux-form";
+import PropTypes from "prop-types";
+
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+
+import { loginUser } from "../actions/auth";
+import { FormInput } from "../components/form-controls";
 
 const styles = (theme => ({
   '@global': {
@@ -39,34 +48,41 @@ const styles = (theme => ({
 
 class Login extends Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       email: "",
-      password: "",
-      errors: {}
+      password: ""
     };
   }
 
-  onChange = e => {
-    this.setState({ [e.target.id]: e.target.value });
-  };
+  componentDidMount() {
+    if(this.props.isAuthenticated) {
+      this.props.history.push("/");
+    }
+  }
+  componentDidUpdate() {
+    if(this.props.isAuthenticated) {
+      this.props.history.push("/");
+    }
+  }
 
-  onSubmit = e => {
-    e.preventDefault();
-    const userData = {
-      email: this.state.email,
-      password: this.state.password
-    };
-    console.log(userData);
-  };
+  login = async userData => {
+    try{
+      await this.props.loginUser(userData);
+    } catch(err) {
+      if(err.response) {
+        throw new SubmissionError(err.response.data);
+      }
+    }
 
+    alert("Sign in successfully");
+  }
 
 
   render() {
-    const { classes } = this.props;
-    const { errors } = this.state;
-
+    const { classes, handleSubmit, isFetching } = this.props;
+ 
     return (
       <Container component="main" maxWidth="xs">
         <CssBaseline />
@@ -77,8 +93,8 @@ class Login extends Component {
           <Typography component="h1" variant="h5" >
             Sign in
           </Typography>
-          <form className={classes.form} noValidate onSubmit={this.onSubmit}>
-            <TextField
+          <form className={classes.form} onSubmit={handleSubmit(this.login)}>
+            <Field
               variant="outlined"
               margin="normal"
               required
@@ -88,11 +104,10 @@ class Login extends Component {
               name="email"
               autoComplete="email"
               autoFocus
-              onChange={this.onChange}
-              value={this.state.email}
-              error={errors.email}
+              disabled={isFetching}
+              component={FormInput}
             />
-            <TextField
+            <Field
               variant="outlined"
               margin="normal"
               required
@@ -101,9 +116,8 @@ class Login extends Component {
               label="Password"
               type="password"
               id="password"
-              onChange={this.onChange}
-              value={this.state.password}
-              error={errors.password}
+              component={FormInput}
+              disabled={isFetching}
             />
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
@@ -116,7 +130,8 @@ class Login extends Component {
               color="primary"
               className={classes.submit}
             >
-              Sign In
+            {isFetching && <CircularProgress size={25} thickness={10} />}
+            Sign In
             </Button>
             <Grid container>
               <Grid item xs>
@@ -137,5 +152,30 @@ class Login extends Component {
   }
 }
 
+Login.propTypes = {
+  isFetching: PropTypes.bool.isRequired, 
+  isAuthenticated: PropTypes.bool.isRequired
+}
 
-export default withStyles(styles)(Login);
+const mapStateToProps = state => ({
+  isFetching: state.auth.isFetching, 
+  isAuthenticated: state.auth.isAuthenticated
+})
+
+export default compose(
+  withStyles(styles),     // makeStyles -> this.props.classess
+  withRouter,             // this.props.history -> redirect
+  connect(                // connect with store
+    mapStateToProps,      // this.state -> this.props
+    { loginUser }         // action(which calls dispatch) -> this.props.loginUser
+  ), 
+  reduxForm({             // update data in <Field>
+    form: "login", 
+    validate: (values, props) => {  // handle input errors
+      const errors = {};
+      if(!values.email) errors.email = "You must type your email address!";
+      if(!values.password) errors.password = "You must type your password!";
+      return errors;
+    }
+  })
+)(Login);
