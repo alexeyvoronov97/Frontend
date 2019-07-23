@@ -2,105 +2,49 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { compose } from "redux";
 import { connect } from "react-redux";
+import Modal from "react-modal";
+import { withRouter, Route } from "react-router-dom"
 
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '@material-ui/core/IconButton';
-import InputBase from '@material-ui/core/InputBase';
-import { fade, withStyles } from '@material-ui/core/styles';
-import MenuIcon from '@material-ui/icons/Menu';
-import SearchIcon from '@material-ui/icons/Search';
-import AlarmIcon from '@material-ui/icons/Alarm';
-import ChatIcon from '@material-ui/icons/Chat';
-import InboxIcon from '@material-ui/icons/Inbox';
-import TodayIcon from '@material-ui/icons/Today';
-import WeekIcon from '@material-ui/icons/DateRange';
-import Avatar from '@material-ui/core/Avatar';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import PlusIcon from "@material-ui/icons/NoteAdd";
+import { withStyles } from '@material-ui/core/styles';
+
+import { FaInbox, FaCalendarDay, FaCalendarWeek, FaList, FaPlus, FaRegStar } from 'react-icons/fa';
+
+import { getLists, setCurList } from "../actions/list";
+import { getTasks  } from "../actions/task";
+import SearchToolBar from "../components/list/search-tool-bar";
+import UserToolBar from "../components/list/user-tool-bar";
+import ListItem from "../components/list/list-item";
+import CreateListPopup from "../components/list/create-list-popup";
+
+
 
 const styles = (theme => ({
-  root: {
+  listRoot: {
     display: "flex", 
-    flexDirection: "column", 
-    height: "100vh", 
+    flexDirection: "column",
+    height: "100vh",
   },
-  menuButton: {
-    marginRight: theme.spacing(2),
-  },
-  title: {
-    display: 'none',
-    [theme.breakpoints.up('sm')]: {
-      display: 'block',
-    },
-  },
-  search: {
-    position: 'relative',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.white, 0.15),
-    '&:hover': {
-      backgroundColor: fade(theme.palette.common.white, 0.25),
-    },
-    marginLeft: 0,
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      marginLeft: theme.spacing(1),
-      width: 'auto',
-    },
-  },
-  searchIcon: {
-    width: theme.spacing(7),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inputRoot: {
-    color: 'inherit',
-  },
-  inputInput: {
-    padding: theme.spacing(1, 1, 1, 7),
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      width: 150,
-    },
-  },
-  toolbar: {
-    minHeight: "50px", 
-    height: "50px", 
-    paddingLeft: "15px",
-    paddingRight: "10px", 
+  listsScroll: {
+    overflow: "scroll",
+    flex: "1",
+    display: "flex",
+    flexDirection: "column",
+    webkitBoxFlex: "1",
+    webkitBoxOrient: "vertical",
   }, 
-  avatar: {
-    background: "lightslategrey", 
-    width: "35px", 
-    height: "35px", 
+  foot: {
+    display: "flex", 
+    borderTop: "1px solid rgba(0,0,0,0.1)",
+    background: "#f7f7f7",
+    height: "42px",
+    webkitBoxAlign: "center",
+    alignItems: "center",
+    fontSize: "15px",
+    color: "#328ad6",
+    fill: "#328ad6",
+    cursor: "pointer",
   }, 
-  avatarButton: {
-    cursor: "pointer", 
-    background: "inherit", 
-    fontSize: "x-large",
-    border: "inherit", 
-    outline: "none", 
-    paddingLeft: "15px", 
-    paddingRight: "70px", 
-  }, 
-  icon: {
-    marginLeft: "20px",
-    cursor: "pointer", 
-  }, 
-  head: {
-    height: "100px", 
-  }, 
-  body: {
-    overflow: "scroll", 
-    flexGrow: 1,
-  }, 
-  addButton: {
+  button: {
     cursor: "pointer",
     fontSize: "x-large", 
     border: "inherit", 
@@ -108,149 +52,131 @@ const styles = (theme => ({
     width: "100%", 
     textAlign: "initial", 
   }, 
-  plusIcon: {
-    margin: "10px", 
-    marginRight: "0", 
+  icon: {
+    height: "20px",
+    width: "20px",
+    paddingLeft: "3px",
+    paddingRight: "3px",
+    textAlign: "center",
   }, 
-  foot: {
-    display: "flex", 
-
+  createIcon: {
+    height: "20px",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    cursor: "pointer", 
+  },
+  popup: {
+    display: "flex",
+    paddingTop: "80px",
+    paddingBottom: "80px",
+    top:"80px",
+  },
+  popupInner: {
+    margin: "auto",
   }
 }));
 
-function SearchAppBar(props) {
-  const { classes } = props;
-
-  return (
-    <>
-      <AppBar position="static">
-        <Toolbar className={classes.toolbar}>
-          <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="Open drawer"
-          >
-            <MenuIcon />
-          </IconButton>
-          <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
-            </div>
-            <InputBase
-              placeholder="Search…"
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput,
-              }}
-              inputProps={{ 'aria-label': 'Search' }}
-            />
-          </div>
-        </Toolbar>
-      </AppBar>
-    </>
-  );
-}
-
-function UserToolBar(props) {
-
-  const { classes } = props;
-
-  return (
-    <div>
-      <AppBar position="static" color="default">
-        <Toolbar className={classes.toolbar}>
-          <Avatar className={classes.avatar}>A</Avatar>
-          <button className={classes.avatarButton}>Frank</button>
-          <AlarmIcon fontSize="large" className={classes.icon}/>
-          <ChatIcon fontSize="large" className={classes.icon}/>
-        </Toolbar>
-      </AppBar>
-    </div>
-  );
-}
-
-function ListFilterItem(props) {
-  const { icon, text } = props;
-
-  return (
-    <>
-      <ListItem button>
-        {icon}
-        <ListItemText primary={text} />
-      </ListItem>
-    </>
-  );
-}
-
-
-function ListItems(props) {
-
-  const { classes } = props;
-
-  return (
-      <>
-        <ListFilterItem icon={<InboxIcon fontSize="large"/>} text="Inbox"/>
-        <ListFilterItem icon={<TodayIcon fontSize="large"/>} text="Today"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-        <ListFilterItem icon={<WeekIcon fontSize="large"/>} text="Week"/>
-      </>
-  )
-}
-
-
 class List extends Component {
+
+    constructor(props) {
+      super(props);
+      this.state={
+        modalOpen: false, 
+      }
+    }
+
+    componentDidMount() {
+      this.props.getLists();
+      Modal.setAppElement('body');
+    }
+
+    onClickListItem = (value) => {
+      this.props.setCurList({
+        _id: value._id, 
+        name: value.name,
+      });
+      this.props.getTasks(value._id);
+      this.props.history.push(`/app/list/${value._id}`);
+      
+    };
+
+    onClickFilterItem = (filter) => {
+      let filterUpper = filter;
+      filterUpper = filterUpper[0].toUpperCase() + filterUpper.substr(1);
+      this.props.setCurList( {
+        _id: filter, 
+        name: filterUpper, 
+      });
+      this.props.getTasks(filter);
+      this.props.history.push(`/app/list/${filter}`);
+    }
+
+    onOpenModal = () => {
+      this.setState({"modalOpen": true});
+    }
+    onCloseModal = () => {
+      this.setState({"modalOpen": false});
+    }
+
     render() {
 
-      const { classes } = this.props;
+      const { classes, list } = this.props;
+      const { listArray } = list;
+
 
       return (
-        <div className={classes.root}>
-          <div className={classes.head}>
-              <SearchAppBar classes={ classes }/>
-              <UserToolBar classes={ classes }/>
+        <div className={ classes.listRoot } id="ListDiv">
+              <SearchToolBar/>
+              <UserToolBar/>
+          <div className={ classes.listsScroll }>
+            <ListItem icon={<FaInbox className={classes.icon} color="#2b8dec"/>} text="Inbox"/>
+            <ListItem icon={<FaRegStar className={classes.icon} color="#db4c3f"/>} text="Starred" onClick={this.onClickFilterItem.bind(this, 'starred')}/>
+            <ListItem icon={<FaCalendarDay className={classes.icon} color="#5fa004"/>} text="Today" onClick={this.onClickFilterItem.bind(this, 'today')}/>
+            <ListItem icon={<FaCalendarWeek className={classes.icon} color="#e29600"/>} text="Week" onClick={this.onClickFilterItem.bind(this, 'week')}/>
+            {
+              listArray.map((value, index) => <ListItem icon={<FaList className={classes.icon} color="#1c1c1c"/>} text={value.name} key={`list_my_item_${index}`} onClick={this.onClickListItem.bind(this, value) }/> )
+            }
           </div>
-          <div className={ classes.body }>
-            <ListItems/>
-          </div>
+          
           <div className={ classes.foot }>
-            <PlusIcon className={ classes.plusIcon }/>
-            <button className={ classes.addButton }>
-              Create a list
-            </button>
+            <FaPlus className={ classes.createIcon }/>
+            <span onClick={this.onOpenModal}> Create a list </span>
           </div>
+
+          <Modal isOpen={this.state.modalOpen} onRequestClose={this.onCloseModal} className={classes.popup}>
+            <div className={classes.popupInner}>
+              <CreateListPopup close={this.onCloseModal}/>
+            </div>
+          </Modal>
+
         </div>
       );
     }
 };
-
 List.propTypes = {
   classes: PropTypes.object.isRequired, 
+  list: PropTypes.object.isRequired, 
+  getLists: PropTypes.func.isRequired, 
+  setCurList: PropTypes.func.isRequired, 
+  getTasks: PropTypes.func.isRequired, 
 };
+// List.displayName = 'List Component';
 
 const mapStateToProps = state => ({
+  list: state.list, 
+});
 
+const mapDispatchToProps = dispatch => ({
+  getLists: () => dispatch(getLists()), 
+  setCurList: listData => dispatch(setCurList(listData)), 
+  getTasks: listId => dispatch(getTasks(listId)),
 });
 
 export default compose(
     withStyles(styles), 
+    withRouter,
     connect(
         mapStateToProps, 
-        null
+        mapDispatchToProps
     )
 )(List);

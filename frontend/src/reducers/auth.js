@@ -10,7 +10,7 @@ const initialState = {
 export default (state = initialState, action) => {
     switch(action.type) {
         case "AUTH_REQ_PENDING":
-            console.log("PENDING", action);
+            console.log("AUTH_REQ_PENDING", action);
             return {
                 ...state, 
                 isFetching: true, 
@@ -18,7 +18,7 @@ export default (state = initialState, action) => {
                 user: {}
             };
         case "AUTH_REQ_FULFILLED":
-            console.log("FULLFILLED", action);
+            console.log("AUTH_REQ_FULFILLED", action);
             const { token } = action.payload.data;
             let user;
 
@@ -34,7 +34,7 @@ export default (state = initialState, action) => {
                 user
             };
         case "AUTH_REQ_REJECTED":
-            console.log("REJECTED", action);
+            console.log("AUTH_REQ_REJECTED", action);
             alert(action.payload);
             return {
                 ...state, 

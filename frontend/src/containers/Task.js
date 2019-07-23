@@ -3,85 +3,105 @@ import PropTypes from "prop-types";
 import { compose } from "redux";
 import { connect } from "react-redux";
 
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import ListItemText from "@material-ui/core/ListItemText";
-import ListItem from "@material-ui/core/ListItem";
 import { withStyles } from "@material-ui/core/styles";
-import PlusIcon from "@material-ui/icons/NoteAdd";
+import { FaPlus } from 'react-icons/fa';
+
+import TaskToolBar from "../components/task/task-tool-bar";
+import TaskItemList from "../components/task/task-item-list";
+import { addTask } from "../actions/task";
 
 const styles = theme => ({
   root: {
     display: "flex", 
     flexDirection: "column", 
+    height: "100vh", 
+    padding: "0", 
+    margin: "0", 
+    background: "none", 
   }, 
-  toolbar: {
-    minHeight: "50px", 
-    
+  scroll: {
+    overflowY: "auto",
+    overflowX: "hidden",
+    marginRight: "7px",
+    marginLeft: "7px",
+    paddingLeft: "7px",
+    paddingRight: "7px",
+    flex: "1",
   }, 
-  bar: {
-    
+  addTask: {
+    background: "rgba(102,137,100,0.75)",
+    overflow: "hidden",
+    position: "relative",
+    margin: "14px 0",
+    padding: "0 12px",
+    borderRadius: "3px",
   }, 
-  add: {
-    display: "flex", 
-  }, 
-  icon: {
-    margin: "13px", 
-    marginRight: "0px", 
-    width: "40px", 
-    height: "40px", 
-    cursor: "pointer", 
-    background: "cadetblue", 
+  plusIconWrapper: {
+    left: "10px",
+    top: "14px",   
+    width: "20px",
+    height: "20px",
+    position: "absolute",
+    cursor: "pointer",
+  },
+  plusIcon: {
+    fill: "#fff",
+    width: "20px", 
+    height: "20px", 
   }, 
   input: {
-    margin: "13px", 
-    marginLeft: "0px", 
-    outline: "none", 
-    fontSize: "x-large",
-    width: "-webkit-fill-available", 
-    background: "inherit", 
-    border: "inherit", 
-    background: "cadetblue", 
+    color: "#fff",
+    paddingLeft: "28px",
+    fontSize: "16px",
+    padding: "13px 60px 14px 0",
+    border: "none",
+    background: "none", 
   },
-  list: {
-
-  }
-});
-function TaskAppBar(props) {
   
-  const { classes } = props;
+});
 
-  return (
-    <div>
-    
-      <AppBar position="static">
-        <Toolbar className={classes.toolbar}>
-        {props.text}
-        </Toolbar>
-      </AppBar>
-    </div>
-  );
-}
 
 class Task extends Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      inputName: ""
+    }
+  }
+
+  onChange = (event) => {
+    this.setState({"inputName": event.target.value});
+  }
+  onEnter = (event, id) => {
+    console.log(id);
+    if(event.key === 'Enter' && id != 'inbox' && id != 'today' && id != 'week' && id != 'starred') {
+      this.props.addTask({listId: id, taskName: this.state.inputName});
+      this.setState({"inputName": ""});
+    }
+  }
+
   render() {
-    const { classes } = this.props;
+
+    const { inputName } = this.state;
+    const { classes, task, list } = this.props;
+    const { curList } = list;
+    const { taskArray } = task;
+    
+    console.log("task::render()", taskArray.length);
 
     return (
       <div className={classes.root}>
-        <div className={classes.task}>
-          <TaskAppBar text="List Name" classes={classes}/>
-        </div>
-        <div className={classes.add}>
-          <PlusIcon className={classes.icon}/>
-          <input className={classes.input}>
-          </input>
-        </div>
-        <div className={classes.list}>
-          <ListItem button>
-            <ListItemText primary={"task"} />
-          </ListItem>
+        <TaskToolBar text={curList.name}/>
+        <div className={classes.scroll}>
+          <div className={classes.addTask}>
+            <div className={classes.plusIconWrapper}>
+              <FaPlus className={classes.plusIcon}/>
+            </div>
+            <input className={classes.input} placeholder="Add a to-do..." value={inputName} onChange={this.onChange}
+                  onKeyPress={event => ( this.onEnter(event, curList._id) )}/>
+          </div>
+          <TaskItemList/>
         </div>
       </div>
     );
@@ -89,17 +109,25 @@ class Task extends Component {
 };
 
 Task.propTypes = {
-  classes: PropTypes.object.isRequired
+  classes: PropTypes.object.isRequired, 
+  list: PropTypes.object.isRequired, 
+  task: PropTypes.object.isRequired, 
+  addTask: PropTypes.func.isRequired, 
 };
 
 const mapStateToProps = state => ({
+  list: state.list, 
+  task: state.task, 
+});
 
+const mapDispatchToProps = dispatch => ({
+  addTask: taskData => dispatch(addTask(taskData))
 });
 
 export default compose(
     withStyles(styles), 
     connect(
         mapStateToProps, 
-        null
+        mapDispatchToProps
     )
 )(Task);

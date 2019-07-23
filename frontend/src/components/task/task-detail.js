@@ -3,19 +3,27 @@ import PropTypes from "prop-types";
 import { compose } from "redux";
 import { connect } from "react-redux";
 
-import TextField from '@material-ui/core/TextField';
+import { FaRegCheckSquare, FaRegSquare, FaStar, FaRegStar } from 'react-icons/fa';
 import ListItemText from "@material-ui/core/ListItemText";
 import ListItem from "@material-ui/core/ListItem";
 import { withStyles } from "@material-ui/core/styles";
+import TaskItem from "../task/task-item";
 
 const styles = theme => ({
   root: {
-    display: "flex", 
-    flexDirection: "column", 
-    height: "100%"
+    position: "relative",
+    background: "#fff",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    height: "100vh",
   }, 
   top: {
-    flexGrow: "0",
+  }, 
+  checkBox: {
+    position: "absolute",
+    left: "18px",
+    top: "18px",
   }, 
   body: {
     flexGrow: "3", 
@@ -33,9 +41,7 @@ class TaskDetail extends Component {
     return (
       <div className={classes.root}>
         <div className={classes.top}>
-          <ListItem>
-            <ListItemText primary={"TaskDetail"} />
-          </ListItem>
+          {/* <TaskItem/> */}
         </div>
         <div className={classes.body}>
           <ListItem button>

@@ -13,7 +13,13 @@ import * as serviceWorker from './serviceWorker';
 // recover last login
 if(!isEmpty(localStorage.jwtToken)) {
     const decoded = jwt_decode(localStorage.jwtToken);
-    store.dispatch(setCurrentUser(decoded));
+
+    if (Date.now() < decoded.exp * 1000) {    /* token is available */
+      console.log("Token is available:", decoded);
+      store.dispatch(setCurrentUser(decoded));
+    } else {
+      localStorage.removeItem("jwtToken");
+    }
 }
 
 axios.interceptors.request.use(function(config) {

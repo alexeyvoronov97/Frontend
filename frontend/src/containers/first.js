@@ -35,11 +35,11 @@ class Home extends Component {
                 Log In
               </Link>
               <br/>
-              <Link to="/main" >
+              <Link to="/app/list" >
                 Main
               </Link>
               <br/>
-              <a onClick={event => (localStorage.removeItem("jwtToken"))}>Log Out</a>
+              <a onClick={() => (localStorage.removeItem("jwtToken"))}>Log Out</a>
           
         </div>
     );

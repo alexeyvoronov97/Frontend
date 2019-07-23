@@ -18,7 +18,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 
 import { registerUser } from "../actions/auth";
-import { FormInput } from "../components/form-controls";
+import { FormInput } from "../components/auth/form-controls";
 
 
 const styles = (theme => ({
